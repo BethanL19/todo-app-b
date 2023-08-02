@@ -1,5 +1,5 @@
 export interface DbItem {
-  // sketch out interface here
+  task: string;
 }
 
 export interface DbItemWithId extends DbItem {
@@ -18,14 +18,14 @@ let idCounter = 0;
  * @returns the created items
  */
 export const addDummyDbItems = (n: number): DbItemWithId[] => {
-  const createdSignatures: DbItemWithId[] = [];
+  const createdItems: DbItemWithId[] = [];
   for (let count = 0; count < n; count++) {
-    const createdSignature = addDbItem({
-      // possibly add some generated data here
+    const createdItem = addDbItem({
+      task: "do something",
     });
-    createdSignatures.push(createdSignature);
+    createdItems.push(createdItem);
   }
-  return createdSignatures;
+  return createdItems;
 };
 
 /**
