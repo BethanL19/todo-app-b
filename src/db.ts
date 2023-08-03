@@ -1,5 +1,6 @@
 export interface DbItem {
   task: string;
+  complete: boolean;
 }
 
 export interface DbItemWithId extends DbItem {
@@ -22,6 +23,7 @@ export const addDummyDbItems = (n: number): DbItemWithId[] => {
   for (let count = 0; count < n; count++) {
     const createdItem = addDbItem({
       task: "do something",
+      complete: false,
     });
     createdItems.push(createdItem);
   }
