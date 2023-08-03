@@ -2,13 +2,13 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import {
-  addDummyDbItems,
   addDbItem,
   getAllDbItems,
   getDbItemById,
   DbItem,
   updateDbItemById,
   ReceiveTask,
+  deleteDbItemById,
 } from "./db";
 import filePath from "./filePath";
 
@@ -66,6 +66,7 @@ app.delete<{ id: string }>("/items/:id", (req, res) => {
   if (matchingItem === "not found") {
     res.status(404).json(matchingItem);
   } else {
+    deleteDbItemById(parseInt(req.params.id));
     res.status(200).json(matchingItem);
   }
 });
