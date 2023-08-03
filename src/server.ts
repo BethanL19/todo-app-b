@@ -8,12 +8,13 @@ import {
   getDbItemById,
   DbItem,
   updateDbItemById,
+  ReceiveTask,
 } from "./db";
 import filePath from "./filePath";
 
 // loading in some dummy items into the database
 // (comment out if desired, or change the number)
-addDummyDbItems(10);
+// addDummyDbItems(10);
 
 const app = express();
 
@@ -41,7 +42,7 @@ app.get("/items", (req, res) => {
 });
 
 // POST /items
-app.post<{}, {}, DbItem>("/items", (req, res) => {
+app.post<{}, {}, ReceiveTask>("/items", (req, res) => {
   // to be rigorous, ought to handle non-conforming request bodies
   // ... but omitting this as a simplification
   const postData = req.body;

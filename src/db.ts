@@ -7,6 +7,10 @@ export interface DbItemWithId extends DbItem {
   id: number;
 }
 
+export interface ReceiveTask {
+  text: string;
+}
+
 const db: DbItemWithId[] = [];
 
 /** Variable to keep incrementing id of database items */
@@ -21,10 +25,7 @@ let idCounter = 0;
 export const addDummyDbItems = (n: number): DbItemWithId[] => {
   const createdItems: DbItemWithId[] = [];
   for (let count = 0; count < n; count++) {
-    const createdItem = addDbItem({
-      task: "do something",
-      complete: false,
-    });
+    const createdItem = addDbItem({ text: "do something" });
     createdItems.push(createdItem);
   }
   return createdItems;
@@ -36,10 +37,11 @@ export const addDummyDbItems = (n: number): DbItemWithId[] => {
  * @param data - the item data to insert in
  * @returns the item added (with a newly created id)
  */
-export const addDbItem = (data: DbItem): DbItemWithId => {
+export const addDbItem = (task: ReceiveTask): DbItemWithId => {
   const newEntry: DbItemWithId = {
     id: ++idCounter,
-    ...data,
+    task: task.text,
+    complete: false,
   };
   db.push(newEntry);
   return newEntry;
