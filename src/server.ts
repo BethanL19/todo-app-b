@@ -1,86 +1,75 @@
-import express from "express";
 import cors from "cors";
+import express from "express";
 import dotenv from "dotenv";
-import {
-  addDbItem,
-  getAllDbItems,
-  getDbItemById,
-  DbItem,
-  updateDbItemById,
-  ReceiveTask,
-  deleteDbItemById,
-} from "./db";
-import filePath from "./filePath";
+import pg from "pg";
 
-// loading in some dummy items into the database
-// (comment out if desired, or change the number)
-// addDummyDbItems(10);
+dotenv.config();
+const Client = pg.Client;
+const client = new Client({ connectionString: process.env.DATABASE_URL });
 
 const app = express();
-
-/** Parses JSON data in a request automatically */
 app.use(express.json());
-/** To allow 'Cross-Origin Resource Sharing': https://en.wikipedia.org/wiki/Cross-origin_resource_sharing */
 app.use(cors());
 
-// read in contents of any environment variables in the .env file
-dotenv.config();
-
-// use the environment variable PORT, or 4000 as a fallback
 const PORT_NUMBER = process.env.PORT ?? 4000;
 
-// API info page
-app.get("/", (req, res) => {
-  const pathToFile = filePath("../public/index.html");
-  res.sendFile(pathToFile);
-});
-
-// GET /items
-app.get("/items", (req, res) => {
-  const allItems = getAllDbItems();
-  res.status(200).json(allItems);
-});
-
-// POST /items
-app.post<{}, {}, ReceiveTask>("/items", (req, res) => {
-  // to be rigorous, ought to handle non-conforming request bodies
-  // ... but omitting this as a simplification
-  const postData = req.body;
-  const createdItem = addDbItem(postData);
-  res.status(201).json(createdItem);
-});
-
-// GET /items/:id
-app.get<{ id: string }>("/items/:id", (req, res) => {
-  const matchingItem = getDbItemById(parseInt(req.params.id));
-  if (matchingItem === "not found") {
-    res.status(404).json(matchingItem);
-  } else {
-    res.status(200).json(matchingItem);
+// get all todos
+app.get("/items", async (req, res) => {
+  try {
+    const all = "SELECT * from todo";
+    const allItems = await client.query(all);
+    res.status(200).json(allItems.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Something went wrong");
   }
 });
 
-// DELETE /items/:id
-app.delete<{ id: string }>("/items/:id", (req, res) => {
-  const matchingItem = getDbItemById(parseInt(req.params.id));
-  if (matchingItem === "not found") {
-    res.status(404).json(matchingItem);
-  } else {
-    deleteDbItemById(parseInt(req.params.id));
-    res.status(200).json(matchingItem);
+// create a todo
+app.post<{}, {}, { text: string }>("/items", async (req, res) => {
+  try {
+    const insert = "INSERT INTO todo (task, complete) VALUES ($1, $2)";
+    const insertValues = [req.body.text, false];
+    const addItem = await client.query(insert, insertValues);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Something went wrong");
+  }
+});
+// delete a todo
+// not working
+app.delete("/items/:id", async (req, res) => {
+  try {
+    const del = "DELETE FROM todo WHERE id = $1";
+    const idNum = parseInt(req.params.id);
+    const delValue = [idNum];
+    const delItem = await client.query(del, delValue);
+    res.json("Item deleted");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Something went wrong");
   }
 });
 
-// PATCH /items/:id
-app.patch<{ id: string }, {}, Partial<DbItem>>("/items/:id", (req, res) => {
-  const matchingItem = updateDbItemById(parseInt(req.params.id), req.body);
-  if (matchingItem === "not found") {
-    res.status(404).json(matchingItem);
-  } else {
-    res.status(200).json(matchingItem);
+// mark as complete
+app.patch<{ id: string }, {}>("/items/:id", async (req, res) => {
+  try {
+    const update = "UPDATE todo SET complete = true WHERE id = $1";
+    const idNum = parseInt(req.params.id);
+    const updateValue = [idNum];
+    const updateItem = await client.query(update, updateValue);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Something went wrong");
   }
 });
 
-app.listen(PORT_NUMBER, () => {
-  console.log(`Server is listening on port ${PORT_NUMBER}!`);
-});
+const start = async () => {
+  await client.connect();
+  const result = await client.query("SELECT COUNT(*) FROM todo");
+  console.log("Found: ", result.rows[0].count);
+  app.listen(PORT_NUMBER, () => {
+    console.log(`Server is listening on port ${PORT_NUMBER}!`);
+  });
+};
+start();
