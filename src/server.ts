@@ -6,6 +6,9 @@ import pg from "pg";
 dotenv.config();
 const Client = pg.Client;
 const client = new Client({ connectionString: process.env.DATABASE_URL });
+if (process.env.DATABASE_URL === undefined) {
+  throw new Error("DATABASE_URL is undefined!");
+}
 
 const app = express();
 app.use(express.json());
